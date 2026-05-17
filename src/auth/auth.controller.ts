@@ -1,6 +1,9 @@
-import { Controller, Post, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { UserRole } from '../users/user.entity';
+import { Roles, RolesGuard } from '../common/roles.guard';
 import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,6 +14,14 @@ export class AuthController {
   @Post('login')
   login(@Request() req: any) {
     return this.authService.login(req.user);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
+  @Post('register')
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
   @UseGuards(AuthGuard('jwt-refresh'))

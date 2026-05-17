@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/user.entity';
+import { User, UserRole } from '../users/user.entity';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,14 @@ export class AuthService {
     private jwtService: JwtService,
     private config: ConfigService,
   ) {}
+
+  async register(dto: RegisterDto): Promise<{ id: string; email: string; role: UserRole }> {
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) throw new ConflictException('Email already in use');
+    const hashed = await bcrypt.hash(dto.password, 10);
+    const user = await this.usersService.create(dto.email, hashed, dto.role);
+    return { id: user.id, email: user.email, role: user.role };
+  }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersService.findByEmail(email);
