@@ -8,6 +8,10 @@ import { User, UserRole } from './user.entity';
 export class UsersService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
+  findAll(): Promise<Pick<User, 'id' | 'email' | 'role' | 'createdAt'>[]> {
+    return this.repo.find({ select: ['id', 'email', 'role', 'createdAt'], order: { createdAt: 'DESC' } });
+  }
+
   findByEmail(email: string): Promise<User | null> {
     return this.repo.findOneBy({ email });
   }
